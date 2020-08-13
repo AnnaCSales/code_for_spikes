@@ -18,5 +18,8 @@ function [sdf, tbase] = unitSDF(spikeStruct, cellID, time, gaussSDtime)
     
     sdf = conv2(spk_count_unit,gk,'same'); % convolve with gaussian window
     tbase = tbin_edges(1:end-1)+binsize/2;
+    
+    sdf(end)=[]; %end up with one too many due to the way the edges of bins are constructed.
+    tbase(end)=[];
 end
 
