@@ -44,62 +44,10 @@ if laserts
 end
 %% plot waveforms during laser stim and compare to those from other times
 
-% wfparams.dataDir=[pwd '\'];; %where is raw data
-% wfparams.fileName='dataALL.bin';
-% wfparams.nCh = 32;
-% wfparams.dataType='int16';
-% wfparams.wfWin = [-40 41];  %number of samples before and after spike peak
-% wfparams.nWf = 2000;   %number of waveforms to return (if they are there)
-% wfparams.nBad=0; %nobad channels.
-% fs=spikeStruct.sample_rate;
-% %make a table of times to consider,e.g during TTLs
-% spikes_duringTTL=[];
-% clusterIDs_duringTTL=[];  
-% all_spk_ts=spikeStruct.st;
-% all_spk_IDs=spikeStruct.clu;
-% 
-% laser_events=stims_by_type{1};
-% 
-% for p=1:size(laser_events,1) 
-%     event_time=laser_events(p,1);
-%     inds_duringTTL=find(all_spk_ts>TTLts(p) & all_spk_ts<TTLts(p)+0.01); %10ms around TTL
-%     spikes_duringTTL=[spikes_duringTTL,round(all_spk_ts(inds_duringTTL) * fs)']; %spike times of interest, in samples.
-%     clusterIDs_duringTTL=[clusterIDs_duringTTL, all_spk_IDs(inds_duringTTL)'];
-% end
-% 
-% wfparams.spikeTimes=spikes_duringTTL';  %
-% wfparams.spikeClusters = clusterIDs_duringTTL';  %IDs of each spike, when all spikes are listed in one vector
-% 
-% wf_laser=getWaveForms_with_std_and_bad(wfparams); 
-% 
-% 
-% nplots=ceil(sqrt(length(wf_laser.unitIDs)));
-% figure('Color', 'w')
-% 
-% for g=1:length(wf_laser.unitIDs)
-%   
-%     this_clust=wf_laser.unitIDs(g);
-%     clust_ID=find(spikeStruct.cids==this_clust)
-%     c_chan=spikeStruct.c_channel(clust_ID)
-%     
-%     wf_mean_laser=wf_laser.waveFormsMean(g, c_chan, :)
-%     n_spks_used=sum(~isnan(wf_laser.spikeTimeKeeps(g,:)));
-%     wf_sem_laser=wf_laser.waveFormsSTD(g, c_chan, :)./sqrt(n_spks_used)
-%     
-%     wf_mean_all=spikeStruct.av_waveform{clust_ID};
-%     wf_sem_all=spikeStruct.std_waveform{clust_ID}/sqrt(spikeStruct.nWFs_extracted(clust_ID));
-%     
-%     wave_time=1000/fs *(1:length(wf_mean_all)); %convert to milliseconds
-%     
-%     subplot(nplots, nplots, g)
-%     shadedErrorBar(wave_time, wf_mean_all, wf_sem_all, 'b', 1);
-%     hold on
-%     shadedErrorBar(wave_time, wf_mean_laser, wf_sem_laser, 'r', 1);
-%     xlabel('Time (ms)')
-%     ylabel('\muV')
-%     title(['Cluster #' num2str(clust_ID)], 'FontWeight', 'normal')
-% end
-%   
+short_pulses=stims_by_type{1};
+pulse_times=short_pulses(:,1);  %times of pulses
+duration=5; %pulse duration in ms
+wf_fig=wf_during_laser(spikeStruct,pulse_times, duration, 'dataALL.bin' );
 
 %% Pull out useful things for plotting from the spikeStruct:
 
