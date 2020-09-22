@@ -59,7 +59,12 @@ for g=1:length(wf_laser.unitIDs)
     shadedErrorBar(wave_time, wf_mean_laser, wf_sem_laser, 'r', 1);
     xlabel('Time (ms)');
     ylabel('\muV');
+    xlim([0, 2.7])
     title(['Cluster #' num2str(clust_ID)], 'FontWeight', 'normal');
+     
+    if g==length(wf_laser.unitIDs)
+        text(4,0, {'Red: waveform during laser' 'Blue: waveforms at other times'})
+    end
 end
    
 end

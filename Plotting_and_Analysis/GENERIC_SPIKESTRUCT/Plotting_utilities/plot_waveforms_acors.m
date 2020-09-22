@@ -124,8 +124,8 @@ for iU=1:length(GDcells)
     shadedErrorBar(wave_time, wave, wf_sem, 'b', .5)
     xlabel('ms')
     ylabel('\mu V')
-    title({['Clu #', num2str(iUnit)],...
-        ['av. FR=', num2str(avFR,2), 'Hz']})
+    title({['Clu #', num2str(iUnit)]});%,...
+%         ['av. FR=', num2str(avFR,2), 'Hz']})
     ax = gca;
     ax.FontSize = 8;
     hold on;       

@@ -39,7 +39,7 @@ TTLts(2:2:end)=[]; %Because we have an 'on' and an 'off' and usually only want '
 %% Test out the laser widget
 laserchan=5;  %this is the channel to take TTLs from
 laserts=spikeStruct.TTLs.digital{laserchan};
-[stims, stims_by_type, stim_utils]=laserTTLwidget(laserts);
+[stims, stims_by_type, stim_utils]=laserTTLwidget(laserts, 0.5);
 
 %% plot waveforms during laser stim and compare to those from other times
 
@@ -178,7 +178,7 @@ laser_sp_fig     = figure('color','w','NumberTitle','off', 'name','Spiking activ
 laser_spTabGroup = uitabgroup(laser_sp_fig,'TabLocation','Left');
 
 sq_=ceil(nclusts^0.5) ; %for calculating the number of subplots required
-sq2_=ceil(size(stimtypes,1)^0.5);
+sq2_=ceil(size(stims_by_type,1)^0.5);
 iUnit=1;
 stimMarkers=stim_utils.Markers; %markers for laser events on plot
 laser_labels=stim_utils.labels;  % labels for each laser eventcclc
@@ -198,13 +198,13 @@ for iUnit=1:nclusts
          %pull out the relevant spike times
          ts_= spikeStruct.timesSorted{iUnit};
  
-        for stype=1:size(stimtypes,1)
+        for stype=1:size(stims_by_type,1)
                        
             figure(laser_sp_fig)
             axes('Parent',unit_tab_sp);
             c=subplot(sq2_, sq2_, stype);
             title(laser_labels{stype})      
-            stims_=stimtypes{stype};
+            stims_=stims_by_type{stype};
             nstims=size(stims_, 1);
             gau_sdf_store=[];
             for iTTL=1:nstims
