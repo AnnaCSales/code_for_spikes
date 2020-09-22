@@ -4,10 +4,10 @@
 
 
 %% Load in the spikeStruct.
- datapath='D:\NTS_Pabitra\120820\Rec2\'; %dont forget backslash
- load([datapath 'spikeStruct.mat']);
+%  datapath='D:\NTS_Pabitra\120820\Rec2\'; %dont forget backslash
+%  load([datapath 'spikeStruct.mat']);
  
- ADC_fn='D:\NTS_Pabitra\120820\Rec2\ADC\100_ADC2.continuous';
+ ADC_fn='D:\NTS_Pabitra\NTS_new_data\EMG_ECG\100_ADC2.continuous';
 %% Plot out where all the clusters are in space on the probe
 probe_fig = plotProbe(spikeStruct)
 
@@ -39,9 +39,8 @@ TTLts(2:2:end)=[]; %Because we have an 'on' and an 'off' and usually only want '
 %% Test out the laser widget
 laserchan=5;  %this is the channel to take TTLs from
 laserts=spikeStruct.TTLs.digital{laserchan};
-if laserts
-    [stims, stims_by_type]=laserTTLwidget(laserts);
-end
+[stims, stims_by_type, stim_utils]=laserTTLwidget(laserts);
+
 %% plot waveforms during laser stim and compare to those from other times
 
 short_pulses=stims_by_type{1};
@@ -168,6 +167,149 @@ for iUnit=1:nclusts
   d.Position=[0.12, 0.35, 0.7, 0.6];
   f.Position=[0.12, 0.075, 0.7, 0.2];
 end
+
+%% Plotting activity around laser
+win=[0.5, 0.5] ; %specify a window, time before and after event to consider
+ 
+laser_fr_fig      = figure('color','w','NumberTitle','off', 'name','FR around laser TTLs (gauss kernel)', 'units', 'centimeters', 'pos',[5 2 33 18]);
+laser_frTabGroup = uitabgroup(laser_fr_fig,'TabLocation','Left');
+
+laser_sp_fig     = figure('color','w','NumberTitle','off', 'name','Spiking activity around laser TTLs per trial', 'units', 'centimeters', 'pos',[5 2 33 18]);
+laser_spTabGroup = uitabgroup(laser_sp_fig,'TabLocation','Left');
+
+sq_=ceil(nclusts^0.5) ; %for calculating the number of subplots required
+sq2_=ceil(size(stimtypes,1)^0.5);
+iUnit=1;
+stimMarkers=stim_utils.Markers; %markers for laser events on plot
+laser_labels=stim_utils.labels;  % labels for each laser eventcclc
+
+for iUnit=1:nclusts
+        
+         %plot each unit on a new tab
+         figure(laser_fr_fig)
+         unit_tab = uitab(laser_frTabGroup, 'Title', ['Cluster ' num2str(iUnit)],'BackgroundColor','w');     
+          axes('Parent',unit_tab);
+         
+         figure(laser_sp_fig)
+         unit_tab_sp = uitab(laser_spTabGroup, 'Title', ['Cluster ' num2str(iUnit)],'BackgroundColor','w');     
+          axes('Parent',unit_tab_sp);
+         ts_=[];
+         
+         %pull out the relevant spike times
+         ts_= spikeStruct.timesSorted{iUnit};
+ 
+        for stype=1:size(stimtypes,1)
+                       
+            figure(laser_sp_fig)
+            axes('Parent',unit_tab_sp);
+            c=subplot(sq2_, sq2_, stype);
+            title(laser_labels{stype})      
+            stims_=stimtypes{stype};
+            nstims=size(stims_, 1);
+            gau_sdf_store=[];
+            for iTTL=1:nstims
+                
+                event_ts=stims_(iTTL, 1);   
+
+                win_st=event_ts-win(1);
+                win_end=event_ts+win(2);
+                 
+                ts_ind=find(ts_>=win_st & ts_<=win_end);
+                ts_window=ts_(ts_ind);  %store all the data that's been cut.
+                                       
+                % convolve the spike train in the window with Gaussian kernel to
+                % estimate FR
+                binsize = 0.001; % select a small bin size for good time resolution
+                tbin_edges = win_st:binsize:win_end;
+                
+                if iTTL==1 %store a time vector for plotting
+                    tbin_centers = tbin_edges(1:end-1)+binsize/2;
+                    t_plot=tbin_centers-event_ts;
+                end
+                
+                %bin and histogram
+                spk_count = histc(ts_,tbin_edges);
+                spk_count = spk_count(1:end-1);
+                               
+                gauss_window = 1./binsize; % 1 second window
+                gauss_SD = 0.05./binsize; % 0.05 seconds (50ms) SD
+                gk = gausskernel(gauss_window,gauss_SD); 
+                gk = gk./binsize; % normalize by binsize
+                gau_sdf = conv2(spk_count,gk,'same'); % do the convolution
+                gau_sdf_store(iTTL,:)=gau_sdf;
+               
+                
+                %plot the spiking activity on the spike plot
+                subplot(c)
+                reps=5;
+                if reps==length(ts_window);
+                    reps=6;  %had to put this in because the plot will mess up if ts_plot is a square!
+                end
+                 
+                 ts_plot=repmat(ts_window-event_ts, 1, reps);  %NB if this is a square matrix the plot will mess up as it'll go along wrong dim  
+                 y_marks_=linspace(-0.3,0.3, reps) + (iTTL) ; %centres at  1,2,3 etc for each trial  #
+                 if ts_window %only try to plot if there are actually spikes in the window
+                    plot(ts_plot, y_marks_', 'k');
+                 end
+                 hold on            
+                         
+            end
+            
+            %add labels / laser markers to the subplot etc.
+            subplot(c)
+            title(laser_labels{stype})      
+            xlabel('Time (s)')
+            ylabel('Trial #')
+            set(gca,'FontSize', 14);
+            yticks(1:nstims);          
+            markers=stimMarkers{stype};
+            %use an odd number for 'reps' here as should always have an
+            %even number of laser markers (on/off TTLs)
+            maxploty=nstims+1;
+            plot( repmat(markers, 1,7), linspace(0, maxploty, 7), 'Color', [1 0 0 0.25], 'LineWidth', 1)  %use an odd number in the plotting as laser stamps come in pairs - that way it'll never be square
+            
+            for hh=1:length(markers)/2 %give the laser regions a little shading
+                x_patch= [markers((2*hh)-1), markers(2*hh), markers(2*hh), markers(2*hh-1)];
+                y_patch=[0,0,maxploty,  maxploty];
+                patch(x_patch, y_patch, 'r','FaceAlpha',.2, 'EdgeColor', 'none');
+            end
+            xlim([-win(1), win(2)]);
+            %get the means / sums, plot on a different figure.
+            fr_mean=mean(gau_sdf_store, 1);
+            
+            %plot
+            figure(laser_fr_fig)
+            axes('Parent',unit_tab);
+            a=subplot(sq2_, sq2_, stype);
+            subplot(a)  
+            plot(t_plot,fr_mean);
+            hold on
+            xlabel('Time (s)')
+            ylabel('Mean FR (hz) ')
+            xlim([-win(1), win(2)]);
+            title(laser_labels{stype})      
+            maxploty=max(fr_mean);  
+            minploty=min(fr_mean);
+            if minploty<1
+                minploty=0;
+            end
+            if maxploty<1
+                maxploty=2;
+            end
+            ylim([minploty-1, maxploty+1]);    
+            markers=stimMarkers{stype};
+            plot( repmat(markers, 1,7), linspace(0, maxploty, 7),'Color', [1 0 0 0.25], 'LineWidth', 1)  %use an odd number in the plotting as laser stamps come in pairs - that way it'll never be square
+            set(gca,'FontSize', 14);
+            for hh=1:length(markers)/2 %give the laser regions a little shading
+                x_patch= [markers((2*hh)-1), markers(2*hh), markers(2*hh), markers(2*hh-1)];
+                y_patch=[0,0,maxploty,  maxploty];
+                patch(x_patch, y_patch, 'r','FaceAlpha',.2,'EdgeColor', 'none');
+            end
+            
+    end
+    
+    
+end 
 
 %% Smooth firing rate repsonses on the probe by depth, with TTLs. 
 cellList=1:nclusts;

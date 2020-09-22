@@ -3,6 +3,9 @@ function [TTLs] = returnTTLs(dirname,varargin)
 % each of the 8 digital channels, alongside the manually entered information.
 % Expects input arguments (strings) in the form 
 % TTLs= returnTTLs('C:\exampledir') ; for OEP continuous recordings
+% NB there must be an example .continuous file in the folder to correctly
+% extract the TTLs!
+% Varargin provides options for binary data (still being developed)
 
 
 % Anna Sales 31/07/2020
@@ -12,7 +15,7 @@ file_list=dir(dirname);
 chk4cont = regexp({file_list.name}, 'continuous', 'once');
 cont_matches=find(~cellfun(@isempty, chk4cont));
 
-if length(cont_matches)>5
+if length(cont_matches)>0
     
     fprintf('\n Continuous data...reading example file....\n')
     ex_file=file_list(cont_matches(1)).name;

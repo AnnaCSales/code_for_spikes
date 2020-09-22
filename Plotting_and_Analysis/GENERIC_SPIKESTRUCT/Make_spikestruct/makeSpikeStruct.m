@@ -32,7 +32,7 @@ bl_start=0;  %define the baseline period, if there is one.
 bl_end=300;
 
 %% Extract TTLs. 
-struct_file_pn='';
+struct_file_pn='rootpath';
 TTLs = returnTTLs(rootpath, struct_file_pn);
 
 %% Pre-processing 
