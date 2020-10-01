@@ -29,22 +29,22 @@ else
 end
 
 %% specify the cells 
-GDcells=params.cell_list;
+cells2plt=params.cell_list;
 
 %% X-correlations and auto-cors - like in PHY
 
-sp_=length(GDcells) ; %for calculating the number of subplots required
+sp_=length(cells2plt) ; %for calculating the number of subplots required
 bincount=[];
 
-for iU=1:length(GDcells)
-    iUnit=GDcells(iU)
+for iU=1:length(cells2plt)
+    iUnit=cells2plt(iU)
     ts_= spikeStruct.timesSorted{iUnit}; 
       
   
     [bincount, ~] = histcounts(ts_, min_t:ac_binsize:max_t);   %bin size is 5ms
     
     if iU==1 %if we're in the loop for the first time, define the size of bl_bincounts
-        bl_bincounts=zeros(length(GDcells), length(bincount));
+        bl_bincounts=zeros(length(cells2plt), length(bincount));
     end
         
 %     bl_bincounts(iU,:)=zscore(bincount); %store each cell's activity in order to calculate xcor in baseline
@@ -63,8 +63,8 @@ fprintf('\n Calculating xcorrs')
 
 fprintf('\n Plotting xcorrs')
 plotpos=1;
-nGD=length(GDcells)
-corfig=figure('Name', ['Auto / X correlogram for each cluster: ' num2str(ac_binsize*1000) ' ms bins'], 'Color', 'w', 'units', 'centimeters', 'pos', [3, 2, 30, 24])
+nGD=length(cells2plt)
+corfig=figure('Name', ['Auto / X correlogram for each cluster: ' num2str(ac_binsize*1000) ' ms bins'], 'Color', 'w', 'units', 'centimeters', 'pos', [3, 2, 22, 18])
 plot_log=[0 0];
 
 tbase=lags*ac_binsize;
@@ -75,13 +75,13 @@ for ttt=1:nGD
     figure(corfig)
     cols_set=((ttt-1)*nGD); %the set of columns we need.
     target=ttt;
-    target_label=GDcells(ttt);
+    target_label=cells2plt(ttt);
 
     pp=ttt;
     
     for t=1:nGD   %get correlograms we don't have yet i.e don't calcuate 1vs 2 if we already have 2vs1
        comparator=t;
-       comp_label=GDcells(t);    
+       comp_label=cells2plt(t);    
        col_=cols_set+t;
        zero=find(~lags);  
        
@@ -94,18 +94,18 @@ for ttt=1:nGD
                corrs(zeroind)=0; % don't plot zero for acor          
            end
 
-            xbar=bar(tbase(incinds), corrs);
-            hold on
+           xbar=bar(tbase(incinds), corrs);
+           hold on
            xbar.BarWidth=0.9;
            xbar.FaceColor='b';
-           xbar.FaceAlpha=0.5;
+           xbar.FaceAlpha=0.7;
            xbar.EdgeColor='none';
            xbar.LineWidth=0.001;
-           set(gca, 'FontSize', 14)
+           set(gca, 'FontSize', 8)
            hold on
            
            xlim([-windo, windo]);
-           title(['Clu # ' int2str(target_label) 'vs Clu #' int2str(comp_label)], 'FontSize', 11)  ;
+           title(['#' int2str(target_label) ' vs #' int2str(comp_label)], 'FontSize', 10, 'FontWeight', 'normal')  ;
            aa=gca;
            aa.YLim(1)=0;
 
@@ -116,6 +116,8 @@ for ttt=1:nGD
     end
 end
 
+xlabel('Time (s)', 'FontSize', 8)
+ylabel('xcor')
 
 
 end

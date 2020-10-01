@@ -29,7 +29,7 @@ rawData='dataALL.bin';
 TTLfolder='TTL';
 
 bl_start=0;  %define the baseline period, if there is one.
-bl_end=300;
+bl_end=1;
 
 %% Extract TTLs. 
 struct_file_pn='rootpath';
@@ -104,7 +104,7 @@ if ~exist([rootpath , '\newWFs.mat'])  %if we haven't already done it, go get th
     
     n_spks=[];
     for w=1:size(wf.spikeTimeKeeps,1) %go through unit, logging how many waveform examples were saved
-      n_spks(w)=sum(~isnan(wf.spikeTimeKeeps(w,:)))
+      n_spks(w)=sum(~isnan(wf.spikeTimeKeeps(w,:)));
     end
     
     wf_info.meanWF=mean_wf;

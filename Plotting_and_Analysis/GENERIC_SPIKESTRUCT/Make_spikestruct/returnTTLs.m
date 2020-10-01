@@ -83,7 +83,7 @@ if length(cont_matches)>0
                 TTL_labels{m}=label;
         end
 
-            manTTL.TTL_times=TTL_times;
+            manTTL.TTL_times=TTL_times-t_first;
             manTTL.TTL_labels=TTL_labels;
             
             

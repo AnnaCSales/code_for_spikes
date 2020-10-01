@@ -6,7 +6,6 @@ addpath(genpath('D:\Code\MATLAB\AnalysingPHYoutput\GENERIC'));
 %% Load in the spikeStruct.
 %  datapath='D:\Versus\2807\2807oepformat\20200728\Rec1\CommonAvRef\'; %dont forget backslash
 %  load([datapath 'spikeStruct.mat']);
-
 %% Plot out where all the clusters are in space on the probe
 probe_fig = plotProbe(spikeStruct)
 
@@ -14,33 +13,64 @@ probe_fig = plotProbe(spikeStruct)
 
 %specify parameters
 pms.cell_list=[1:spikeStruct.nclusts];
-pms.binsize=5;  %binsize, in ms
-pms.window=100;  %window size, in ms.
+pms.binsize=1;  %binsize, in ms
+pms.window=150;  %window size, in ms.
 pms.baseline = 1 ;
 
 [wavefig, autofig] = plot_waveforms_acors(spikeStruct, pms)
 
+%% Plot across multiple chans
+for u=1:spikeStruct.nclusts
+    multichan_wfs=plot_across_chans(spikeStruct, u) 
+    savefig( multichan_wfs, [pwd '\unit' num2str(u) 'wf_across_chans.fig'] );  
+end
+
+ 
 %% Plot xcors, to check isolation - NB don't plot too many as it's slow
-pms2.cell_list=[1,2,3]%spikeStruct.nclusts];
-pms2.binsize=5;  %binsize, in ms
-pms2.window=500;  %window size, in ms.
-pms2.baseline = 1 ;
+pms2.cell_list=1:spikeStruct.nclusts;
+pms2.binsize=1;  %binsize, in ms
+pms2.window=150;  %window size, in ms.
+pms2.baseline = [] ; %leave empty if no baseline!
 
 [corfig] = cell_xcors(spikeStruct, pms2)
 
 %% specify TTLs to plot
 
-TTLchan=3;  %this is the channel to take TTLs from
-TTLts=spikeStruct.TTLs.digital{TTLchan};
-TTLts(2:2:end)=[];
+TTLchan1=3;  %this is the channel to take TTLs from
+fsts=spikeStruct.TTLs.digital{TTLchan1};
+fsts(2:2:end)=[];
+% fsts(fsts<270)=[];
+% 
+% fsts_2Hz=fsts
+% fsts_2Hz(diff(fsts_2Hz)>0.55)=[];
+% fsts_2Hz(end)=[];
 
-spikeStruct.TTLs.manual.TTL_labels
-labeltimes=spikeStruct.TTLs.manual.TTL_times;
+% fsts_025Hz=fsts
+% fsts_025Hz(diff(fsts_025Hz)<4| diff(fsts_025Hz) >4.5 )=[];
+
+
+TTLchan2=7;
+pedal_ts=spikeStruct.TTLs.digital{TTLchan2};
+sep_events_inds=find(diff(pedal_ts)>0.2); %separate pedal pushes
+ped_ev=[pedal_ts(1);pedal_ts(sep_events_inds+1)]
+ped_starts=ped_ev(1:2:end);
+ped_ends=ped_ev(2:2:end);
+% mants(2:2:end)=[];
+
+% labels_to_keep=[10,15,16,18,19,20,22,24,28];
+% labels_to_keep=[3,4,5,6,7,13,14,15,16,17,18,20,22]
+labels_to_keep=[1,2,3,4,5]
+labels=cell(1, length(labels_to_keep));
+labels(1:length(labels_to_keep))=spikeStruct.TTLs.manual.TTL_labels(labels_to_keep)
+
+labeltimes=spikeStruct.TTLs.manual.TTL_times(labels_to_keep)
+
+
 % Need to edit so we only consider the first one if it's not a laser
-% event!!
-TTLset1=TTLts(find(TTLts<labeltimes(3)));
-TTLset2=TTLts(find(TTLts>labeltimes(3) & TTLts < labeltimes(4)));
-TTLset3=TTLts(find(TTLts > labeltimes(4)));
+% % event!!
+% TTLset1=TTLts(find(TTLts<labeltimes(3)));
+% TTLset2=TTLts(find(TTLts>labeltimes(3) & TTLts < labeltimes(4)));
+% TTLset3=TTLts(find(TTLts > labeltimes(4)));
 
 %% Test out the laser widget
 % laserchan=3;  %this is the channel to take TTLs from
@@ -78,7 +108,7 @@ binwin=0.01;
 foot_sp_fig      = figure('color','w','NumberTitle','off', 'name','Spiking around footshock / pinch TTLs', 'units', 'centimeters', 'pos',[5 2 24 17]);
 foot_spTabGroup = uitabgroup(foot_sp_fig,'TabLocation','Left');
 
-TTL_to_plot=TTLset2;  %update this as needed. These are the TTLs to plot.
+TTL_to_plot=fsts%fsts_2Hz;  %update this as needed. These are the TTLs to plot.
 nTTL=length(TTL_to_plot);
 
 for iUnit=1:nclusts
@@ -117,7 +147,7 @@ for iUnit=1:nclusts
       spk_count_all(iTTL,:)=spk_count;
 
       d=subplot(2,1,1);
-      xlim([-0.5 0.5]);
+      xlim([-0.05 0.1])
       reps=5;
       if reps==length(ts_window);
           reps=6;  %had to put this in because the plot will mess up if ts_plot is a square!
@@ -130,17 +160,17 @@ for iUnit=1:nclusts
           plot(ts_plot, y_marks_', 'k');
       end
       hold on
-      xlim([-0.5 0.5]);
+      xlim([-0.05 0.1]);
 
   end
 
-  xlim([-0.5 0.5])
+ 
   xlabel('')
   ylabel('Trial #')
   set(gca, 'FontSize', 11);
   title('Spikes around footshock', 'FontWeight', 'normal')    
-  yticks(1:nTTL);
-  xlim([-win(1), win(2)]);
+  yticks(0:10:nTTL);
+  xlim([-0.05, 0.1]);
   ylim([0, nTTL+1]);
   plot( zeros(1,2), [0, nTTL+0.5], 'r', 'LineWidth', 1)  %use an odd number in the plotting as laser stamps come in pairs - that way it'll never be square
 
@@ -148,34 +178,35 @@ for iUnit=1:nclusts
 
   %plot mean firing rate
   binned_mean_fr=mean(spk_count_all,1);
-  f=subplot(2,1,2);
-  bar(t_plot,binned_mean_fr);
-  hold on
+  f=subplot(2,1,2); 
   xlabel('Time (s)')
   ylabel('Mean spike count')
-  text(0.3, 2,[num2str(1000*binwin) 'ms bins'])
-  xlim([-win(1), win(2)]);
-  maxploty=max(binned_mean_fr)+1;
-  minploty=0;
-  plot( zeros(1,7), linspace(0, maxploty, 7), 'r', 'LineWidth', 1)  %use an odd number in the plotting as laser stamps come in pairs - that way it'll never be square
-  ylim([0,2.5])
-  set(gca, 'FontSize', 11);
-
-
+  if binned_mean_fr
+      bar(t_plot,binned_mean_fr);
+      hold on
+    
+      text(0, 0.8,[num2str(1000*binwin) 'ms bins'])
+      xlim([-win(1), win(2)]);
+      maxploty=max(binned_mean_fr)+1;
+      minploty=0;
+      plot( zeros(1,7), linspace(0, maxploty, 7), 'r', 'LineWidth', 1)  %use an odd number in the plotting as laser stamps come in pairs - that way it'll never be square
+      ylim([0,1])
+      set(gca, 'FontSize', 11);
+      xlim([-0.05 0.1])
+  end
   d.Position=[0.12, 0.35, 0.7, 0.6];
   f.Position=[0.12, 0.075, 0.7, 0.2];
 end
 
 %% Smooth firing rate repsonses on the probe by depth, with TTLs. 
 
-laserinf=spikeStruct.laserinf;
-laserTTL=laserinf(:,1); %these are the times of laser events
+cellList=[1,2,3]
+timePlot=[0,440]; % time to plot, in seconds.
+binsize=1; %in seconds
+
 fs=spikeStruct.sample_rate;  %sampling rate
 c_channel=spikeStruct.c_channel;  %centre channel for the cluster
-min_t=spikeStruct.timeRange(1);  %min, max spikes in the recording
-max_t=spikeStruct.timeRange(2);
-bl_start=spikeStruct.baseline_st;  %baseline times, if needed.
-bl_end=spikeStruct.baseline_end;
+
 
 c_channel2=c_channel(cellList);
 [vals, indys]=sort(c_channel2);
@@ -206,11 +237,7 @@ for pos=1:1:length(plot_pos2)
 end 
 
 
-%% FR plot - one for each cell, plotted in correct depth order.
-
-cellList=1:10; %specifiy which cells to plot (EDIT)
-timePlot=[0,1000]; % time to plot, in seconds.
-binsize=5; %in seconds
+% FR plot - one for each cell, plotted in correct depth order.
 
 c_channel2=c_channel(cellList);
 [vals, indys]=sort(c_channel2);
@@ -242,16 +269,20 @@ end
 %check if there are laser TTLs included in this period - and mark on the
 %plot if there are.
 
-TTL_inc=TTLts(TTLts>timePlot(1)& TTLts<timePlot(2));
+fsts_inc=fsts(fsts>timePlot(1)& fsts<timePlot(2));
+fs2Hz_inc=fsts_2Hz(fsts_2Hz>timePlot(1)& fsts_2Hz<timePlot(2));
+fs025Hz_inc=fsts_025Hz(fsts_025Hz>timePlot(1)& fsts_025Hz<timePlot(2));
+
+ped_table=[ped_starts, ped_ends]
+ped_inc=ped_ev(ped_ev>timePlot(1)& ped_ev<timePlot(2))
 
 fr_fig= figure('color','w','NumberTitle','off', 'name',' Unit firing', 'units', 'centimeters', 'pos',[5 3 24 15], 'Color', 'white');
 p6 = uipanel('Parent',fr_fig,'BorderType','none'); 
 
 figure(fr_fig)
-ADC_plot=subplot('Position',[0.065 0.05 0.88 0.1],  'Parent', p6)
 
 FRsubplots={};
-sp_height=0.65/length(cellList);
+sp_height=0.6/length(cellList);
 if sp_height > 0.3
     sp_height=0.24
 end
@@ -259,7 +290,7 @@ end
 
 for u=1:length(cellList)
     
-    FRsubplots{u}=subplot('Position',[0.065 0.28+((plot_pos2(u)-1)*1.1*sp_height) 0.88 sp_height],  'Parent', p6);
+    FRsubplots{u}=subplot('Position',[0.065 0.2+((plot_pos2(u)-1)*1.1*sp_height) 0.88 sp_height],  'Parent', p6);
     
     iUnit=cellList(u);
     ts_= spikeStruct.timesSorted{iUnit}; 
@@ -274,7 +305,7 @@ for u=1:length(cellList)
     
     %bin and histogram
     spk_count = histc(ts_,tbin_edges);
-    spk_count = spk_count(1:end-1);
+    spk_count = spk_count(1:end-1) ./binsize;
     %plot
     mybar=bar(t_plot, spk_count);
     mybar.FaceColor=[0 0 1];
@@ -287,7 +318,13 @@ for u=1:length(cellList)
     if plot_pos2(u)==1
         xlabel('Time (s)')
     end
-       ylabel(ticklabs{plot_pos2(u)}, 'FontSize', 8 )
+    
+    if plot_pos2(u)==length(cellList)
+        aa=gca;
+        text(-20,aa.YLim(2)+10, 'Spk rate /s')
+        text(0.8*timePlot(2),aa.YLim(2), 'Green: pedal, red: footshock.')
+    end
+    ylabel(ticklabs{plot_pos2(u)}, 'FontSize', 8 )
     hold on
     
     if plot_pos2(u) >1
@@ -299,22 +336,30 @@ for u=1:length(cellList)
     ymax=aa.YLim(2)
     ymin=aa.YLim(1)
     
-    if TTL_inc
-       plot(repmat(TTL_inc,1,3), [ymin, ymax, ymax], '-r', 'Color', [1 0 0 0.3], 'LineWidth', 1);
+    if fsts_inc
+       plot(repmat(fsts_inc,1,3), [ymin, ymax, ymax], '-r', 'Color', [1 0 0 0.1], 'LineWidth', 1);
     end
+%     if fs2Hz_inc
+%        plot(repmat(fs2Hz_inc,1,3), [ymin, ymax, ymax], '-r', 'Color', [1 0 0 0.1], 'LineWidth', 1);
+%     end
+%     
+%     if fs025Hz_inc
+%        plot(repmat(fs025Hz_inc,1,3), [ymin, ymax, ymax], '-r', 'Color', [1 0.5 0.5 0.1], 'LineWidth', 1);
+%     end
    
+    if ped_inc
+       plot(repmat(ped_inc,1,3), [ymin, ymax, ymax], '-g', 'Color', [0 0.8 0.1 0.1], 'LineWidth', 1);
+    end
+    
 end
 
-%now plot bladder pressure and sphincter EMG
-subplot(ADC_plot)
-hold on
-title('Optional ADC plot', 'FontWeight', 'normal')
- xlim([timePlot(1), timePlot(2)])
-%now overlay laser TTL markers, if included in the period specified.
-if TTL_inc
-    ymax=1
-    ymin=0
-    plot(repmat(TTL_inc,1,3), [ymin, ymax, ymax], '-r', 'Color', [1 0 0 0.2], 'LineWidth', 2);
-end
-xlim([timePlot(1), timePlot(2)])
-title('Optional ADC plot', 'FontWeight', 'normal')
+  MARKERsubplots=subplot('Position',[0.065 0.04 0.88 0.05],  'Parent', p6);
+  for r=1:length(labeltimes)
+      text(labeltimes(r), 0.1, labels{r}, 'Rotation', 90 , 'Fontsize', 6)
+  end
+  set(gca,'xtick',[]) 
+  set(gca,'ytick',[]) 
+  XAxis. TickLength = [0 0];
+  xlim([timePlot(1), timePlot(2)])
+
+
