@@ -2,8 +2,8 @@
 %Comment \ uncomment \ run by highlighting whatever you need. 
 % Anna Sales April 2017
 %% 
-[event_data_all, event_ts_all, event_info] = load_open_ephys_data('D:\Versus\290920\290920\Rec5\all_channels_5.events');
-[data_all, ts_offset, info] = load_open_ephys_data('D:\Versus\290920\290920\Rec5\126_CH17_5.continuous');   
+[event_data_all, event_ts_all, event_info] = load_open_ephys_data('D:\Versus\290920\Rec5\all_channels_5.events');
+[data_all, ts_offset, info] = load_open_ephys_data('D:\Versus\290920\Rec5\126_CH10_5.continuous');   
 %[spike_data, spike_ts, spike_info] = load_open_ephys_data('C:\openEphys\Recordings\2017-02-03_12-18-05\SE0.spikes');
 fs=info.header.sampleRate; % extract sampling rate
 
@@ -13,7 +13,7 @@ win=[0,1200];
 keep_inds=find(ts_all>win(1) & ts_all<win(2));
 
 data=data_all(keep_inds);
-
+ts=ts_all(keep_inds);
 event_keep_inds=find(event_ts>win(1) & event_ts<win(2));
 event_data=event_data_all(event_keep_inds);
 event_ts=event_ts_all(event_keep_inds)-ts_offset(1);
@@ -36,10 +36,10 @@ plot(event_ts(event_data==6), 100, 'gs');
 %plot(repmat(block_times, 50, 1), linspace(-1000, 1000, 50) , '.')
 %%
 
-[data_all1, ts_offset, ~] = load_open_ephys_data('D:\Versus\290920\290920\Rec5\126_CH25_5.continuous', 'Indices',keep_inds(1):keep_inds(end) );   
-[data_all2, ~, ~] = load_open_ephys_data('D:\Versus\290920\290920\Rec5\126_CH14_5.continuous', 'Indices',keep_inds(1):keep_inds(end) );   
-[data_all3, ~, ~] = load_open_ephys_data('D:\Versus\290920\290920\Rec5\126_CH30_5.continuous', 'Indices',keep_inds(1):keep_inds(end) );   
-[data_all4, ~, info] = load_open_ephys_data('D:\Versus\290920\290920\Rec5\126_CH3_5.continuous', 'Indices',keep_inds(1):keep_inds(end) );   
+% [data_all1, ts_offset, ~] = load_open_ephys_data('D:\Versus\290920\290920\Rec5\126_CH25_5.continuous', 'Indices',keep_inds(1):keep_inds(end) );   
+% [data_all2, ~, ~] = load_open_ephys_data('D:\Versus\290920\290920\Rec5\126_CH14_5.continuous', 'Indices',keep_inds(1):keep_inds(end) );   
+% [data_all3, ~, ~] = load_open_ephys_data('D:\Versus\290920\290920\Rec5\126_CH30_5.continuous', 'Indices',keep_inds(1):keep_inds(end) );   
+% [data_all4, ~, info] = load_open_ephys_data('D:\Versus\290920\290920\Rec5\126_CH3_5.continuous', 'Indices',keep_inds(1):keep_inds(end) );   
 
 %%
 %Filter data - COMMENT OUT IF NOT NEEDED
