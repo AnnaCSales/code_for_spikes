@@ -57,9 +57,9 @@ ped_starts=ped_ev(1:2:end);
 ped_ends=ped_ev(2:2:end);
 % mants(2:2:end)=[];
 
-% labels_to_keep=[10,15,16,18,19,20,22,24,28];
+ labels_to_keep=[10,15,16,18,19,20,22,24,28];
 % labels_to_keep=[3,4,5,6,7,13,14,15,16,17,18,20,22]
-labels_to_keep=[1,2,3,4,5]
+% labels_to_keep=[1,2,3,4,5]
 labels=cell(1, length(labels_to_keep));
 labels(1:length(labels_to_keep))=spikeStruct.TTLs.manual.TTL_labels(labels_to_keep)
 
@@ -68,14 +68,14 @@ labeltimes=spikeStruct.TTLs.manual.TTL_times(labels_to_keep)
 
 %Need to edit so we only consider the first one if it's not a laser
 % event!!
-TTLset1=TTLts(find(TTLts<labeltimes(3)));
-TTLset2=TTLts(find(TTLts>labeltimes(3) & TTLts < labeltimes(4)));
-TTLset3=TTLts(find(TTLts > labeltimes(4)));
+% TTLset1=TTLts(find(TTLts<labeltimes(3)));
+% TTLset2=TTLts(find(TTLts>labeltimes(3) & TTLts < labeltimes(4)));
+% TTLset3=TTLts(find(TTLts > labeltimes(4)));
 
 % Test out the laser widget
-laserchan=3;  %this is the channel to take TTLs from
-laserts=spikeStruct.TTLs.digital{laserchan};
-[stims, ~]=laserTTLwidget(laserts);
+% laserchan=3;  %this is the channel to take TTLs from
+% laserts=spikeStruct.TTLs.digital{laserchan};
+% [stims, ~]=laserTTLwidget(laserts);
 
 %% Plot waveforms during footshock
 event_times=fsts_025Hz;
@@ -204,13 +204,12 @@ end
 
 %% Smooth firing rate repsonses on the probe by depth, with TTLs. 
 
-cellList=[1,2,3]
-timePlot=[0,440]; % time to plot, in seconds.
+cellList=[1,2,3,5,6]
+timePlot=[0,1200]; % time to plot, in seconds.
 binsize=1; %in seconds
 
 fs=spikeStruct.sample_rate;  %sampling rate
 c_channel=spikeStruct.c_channel;  %centre channel for the cluster
-
 
 c_channel2=c_channel(cellList);
 [vals, indys]=sort(c_channel2);
@@ -241,35 +240,6 @@ for pos=1:1:length(plot_pos2)
 end 
 
 
-% FR plot - one for each cell, plotted in correct depth order.
-
-c_channel2=c_channel(cellList);
-[vals, indys]=sort(c_channel2);
-
-%work out plotting positions so that the cells are plotted as they appear
-%on the probe, i.e. cells detected ventrally on the probe are at the bottom
-%of the window.
-
-plot_pos2=[];
-for iUnit = 1:length(cellList)    
-    [~,plot_pos2(iUnit)]=find(indys==iUnit) ; % a plot position for each cluster, with lower (deeper) channels getting lower numbers    
-    %plot_pos is a vector n_clusts long with a position for each unit,
-    %provided in the same order as usual.
-end
-
-nclusts2=length(cellList);
-ticker=11:10:(10*(nclusts2+1));
-ticklabs=cell(1,nclusts2);
-
-%set up some labels for plots below.
-for pos=1:1:length(plot_pos2)
-    unit_test(pos)=find(plot_pos2==pos); %The unit that is in the pos-th position on the plot
-    chan_=c_channel2(unit_test(pos));   
-    tt=[{['Clu ', int2str(cellList(unit_test(pos)))]; [' ch ', int2str(c_channel2(unit_test(pos)))]}];
-    ticklabs{pos}=tt;
-end 
-
-
 %check if there are laser TTLs included in this period - and mark on the
 %plot if there are.
 
@@ -279,6 +249,7 @@ fs025Hz_inc=fsts_025Hz(fsts_025Hz>timePlot(1)& fsts_025Hz<timePlot(2));
 
 ped_table=[ped_starts, ped_ends]
 ped_inc=ped_ev(ped_ev>timePlot(1)& ped_ev<timePlot(2))
+ped_starts_inc=find(ped_starts>timePlot(1) & ped_starts<timePlot(2));
 
 fr_fig= figure('color','w','NumberTitle','off', 'name',' Unit firing', 'units', 'centimeters', 'pos',[5 3 24 15], 'Color', 'white');
 p6 = uipanel('Parent',fr_fig,'BorderType','none'); 
@@ -352,9 +323,145 @@ for u=1:length(cellList)
 %     end
    
     if ped_inc
-       plot(repmat(ped_inc,1,3), [ymin, ymax, ymax], '-g', 'Color', [0 0.8 0.1 0.1], 'LineWidth', 1);
+%        plot(repmat(ped_inc,1,3), [ymin, ymax, ymax], '-g', 'Color', [0 0.8 0.1 0.1], 'LineWidth', 1);
+        aa=gca;
+        lower=aa.YLim(1);
+        upper=aa.YLim(2);
+        for q=1:length(ped_starts_inc)
+           mypat=patch([ped_table(q,1), ped_table(q,2), ped_table(q,2), ped_table(q,1)],[lower,lower,upper, upper], 'g')
+           mypat.FaceColor=[0 1 0.1];
+           mypat.FaceAlpha=0.3;
+           mypat.EdgeColor='none';
+       end
     end
     
+end
+
+  MARKERsubplots=subplot('Position',[0.065 0.04 0.88 0.05],  'Parent', p6);
+  for r=1:length(labeltimes)
+      text(labeltimes(r), 0.1, labels{r}, 'Rotation', 90 , 'Fontsize', 6)
+  end
+  set(gca,'xtick',[]) 
+  set(gca,'ytick',[]) 
+  XAxis. TickLength = [0 0];
+  xlim([timePlot(1), timePlot(2)])
+%% Raster plot of spikes over specified period, with TTLs
+
+cellList=[6]
+timePlot=[1000, 1100]; % time to plot, in seconds.
+
+c_channel2=c_channel(cellList);
+[vals, indys]=sort(c_channel2);
+
+%work out plotting positions so that the cells are plotted as they appear
+%on the probe, i.e. cells detected ventrally on the probe are at the bottom
+%of the window.
+
+plot_pos2=[];
+for iUnit = 1:1:length(cellList)
+    
+    [~,plot_pos2(iUnit)]=find(indys==iUnit) ; % a plot position for each cluster, with lower (deeper) channels getting lower numbers
+    
+    %plot_pos is a vector n_clusts long with a position for each unit,
+    %provided in the same order as usual.
+end
+
+nclusts=length(cellList);
+ticker=11:10:(10*(nclusts+1));
+ticklabs={nclusts};
+
+%set up some labels for plots below.
+for pos=1:1:length(plot_pos2)
+    unit_test(pos)=find(plot_pos2==pos); %The unit that is in the pos-th position on the plot
+    chan_=c_channel2(unit_test(pos));   
+    tt=['Clu ', int2str(cellList(unit_test(pos))), ' ch ', int2str(c_channel2(unit_test(pos)))];
+    ticklabs{pos}=tt;
+end 
+
+
+%check if there are laser TTLs included in this period - and mark on the
+%plot if there are.
+
+fsts_inc=fsts(fsts>timePlot(1)& fsts<timePlot(2));
+fs2Hz_inc=fsts_2Hz(fsts_2Hz>timePlot(1)& fsts_2Hz<timePlot(2));
+fs025Hz_inc=fsts_025Hz(fsts_025Hz>timePlot(1)& fsts_025Hz<timePlot(2));
+
+ped_table=[ped_starts, ped_ends]
+ped_inc=ped_ev(ped_ev>timePlot(1)& ped_ev<timePlot(2))
+ped_starts_inc=find(ped_starts>timePlot(1) & ped_starts<timePlot(2));
+fr_fig= figure('color','w','NumberTitle','off', 'name',' Unit firing', 'units', 'centimeters', 'pos',[5 3 24 15], 'Color', 'white');
+p6 = uipanel('Parent',fr_fig,'BorderType','none'); 
+
+figure(fr_fig)
+
+FRsubplots={};
+sp_height=0.6/length(cellList);
+if sp_height > 0.3
+    sp_height=0.24
+end
+
+
+for u=1:length(cellList)
+    
+    FRsubplots{u}=subplot('Position',[0.065 0.2+((plot_pos2(u)-1)*1.2*sp_height) 0.88 sp_height],  'Parent', p6);
+    
+    iUnit=cellList(u);
+    ts_= spikeStruct.timesSorted{iUnit}; 
+    ts_ind=find(ts_>=timePlot(1)& ts_<=timePlot(2));
+    ts_window=ts_(ts_ind);  %store all the data that's been cut.
+    
+    if length(ts_window)>2
+         plot([ts_window, ts_window], [-1,1], 'k')
+    else
+         plot([ts_window, ts_window, ts_window], [-1,1, 1], 'k')
+    end
+    ylim([-2,2])
+
+    hold on
+    if plot_pos2(u)==1
+        xlabel('Time (s)')
+    end
+    
+    if plot_pos2(u)==length(cellList)
+        aa=gca;
+        text(-20,aa.YLim(2)+10, 'Spk rate /s')
+        text(0.8*timePlot(2),aa.YLim(2), 'Green: pedal, red: footshock.')
+    end
+    ylabel(ticklabs{plot_pos2(u)}, 'FontSize', 8 )
+    hold on
+    
+    if plot_pos2(u) >1
+        set(gca,'Xticklabel',[]) 
+        xlabel('')
+    end
+    
+    aa=gca;
+    ymax=aa.YLim(2)
+    ymin=aa.YLim(1)
+    yticks=[];
+    yticklabels=[];
+    if fsts_inc
+       plot(repmat(fsts_inc,1,3), [ymin, ymax, ymax], '-r', 'Color', [1 0 0 0.3], 'LineWidth', 1);
+    end
+%     if fs2Hz_inc
+%        plot(repmat(fs2Hz_inc,1,3), [ymin, ymax, ymax], '-r', 'Color', [1 0 0 0.1], 'LineWidth', 1);
+%     end
+%     
+%     if fs025Hz_inc
+%        plot(repmat(fs025Hz_inc,1,3), [ymin, ymax, ymax], '-r', 'Color', [1 0.5 0.5 0.1], 'LineWidth', 1);
+%     end
+   
+    if ped_inc
+       plot(repmat(ped_inc,1,3), [ymin, ymax, ymax], '-g', 'Color', [0 0.8 0.1 0.3], 'LineWidth', 1);
+       for q=1:length(ped_starts_inc)
+           mypat=patch([ped_table(ped_starts_inc(q),1), ped_table(ped_starts_inc(q),2), ped_table(ped_starts_inc(q),2), ped_table(ped_starts_inc(q),1)],[-2,-2,2,2], 'g');
+           mypat.FaceColor=[0 1 0.1];
+           mypat.FaceAlpha=0.2;
+           mypat.EdgeColor='none';
+       end
+           
+    end
+    xlim([timePlot])
 end
 
   MARKERsubplots=subplot('Position',[0.065 0.04 0.88 0.05],  'Parent', p6);
