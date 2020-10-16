@@ -23,7 +23,6 @@ function wf = getWaveForms_with_std_and_bad(gwfparams)
 % ADDED:
 % gwfparams.nBad  This is the number of disconnected channels.
 
-
 % % OUTPUT
 % wf.unitIDs                               % [nClu,1]            List of cluster IDs; defines order used in all wf.* variables
 % wf.spikeTimeKeeps                        % [nClu,nWf]          Which spike times were used for the waveforms
@@ -45,8 +44,9 @@ wfNSamples = length(gwfparams.wfWin(1):gwfparams.wfWin(end));
 mmf = memmapfile(fileName, 'Format', {gwfparams.dataType [gwfparams.nCh nSamp] 'x'});
 chMap = readNPY([gwfparams.dataDir 'channel_map.npy'])+1;               % Order in which data was streamed to disk; must be 1-indexed for Matlab
 
-% Read spike time-centered waveforms
+
 unitIDs = unique(gwfparams.spikeClusters);
+
 numUnits = size(unitIDs,1);
 spikeTimeKeeps = nan(numUnits,gwfparams.nWf);
 waveForms = nan(numUnits,gwfparams.nWf,gwfparams.nCh-gwfparams.nBad,wfNSamples);  %Amended to take account of disconnected channels.

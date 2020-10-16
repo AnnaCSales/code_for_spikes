@@ -12,6 +12,7 @@ wfparams.dataType='int16';
 wfparams.wfWin = [-40 41];  %number of samples before and after spike peak
 wfparams.nWf = 2000;   %number of waveforms to return (if they are there)
 wfparams.nBad=0; %nobad channels.
+wfparams.cids=spikeStruct.cids;
 fs=spikeStruct.sample_rate;
 
 wfparamsNOT=wfparams; %for extracting waveforms NOT during events
@@ -70,18 +71,25 @@ for g=1:length(wf_event.unitIDs)
     wf_sem_NOTevent=wf_NOTevent.waveFormsSTD(this_clust_NOT, c_chan, :)./sqrt(n_spks_usedNOT);
        
     wave_time=1000/fs *(1:length(wf_mean_event)); %convert to milliseconds
-    
-    subplot(nplots, nplots, g);
-    shadedErrorBar(wave_time, wf_mean_NOTevent, wf_sem_NOTevent, 'b', 1);
-    hold on
-    shadedErrorBar(wave_time, wf_mean_event, wf_sem_event, 'r', 1);
-    xlabel('Time (ms)');
-    ylabel('\muV');
-    xlim([0, 2.7])
-    title(['Cluster #' num2str(clust_ID)], 'FontWeight', 'normal');
-     
-    if g==length(wf_event.unitIDs)
-        text(4,0, {'Red: waveform during laser' 'Blue: waveforms at other times'})
+   
+    subplot(nplots, nplots, g); 
+    try
+        shadedErrorBar(wave_time, wf_mean_NOTevent, wf_sem_NOTevent, 'b', 1);
+        hold on
+        if ~sum(isnan(wf_mean_event)) %only plot if it actually fired during events
+            shadedErrorBar(wave_time, wf_mean_event, wf_sem_event, 'r', 1);
+        end
+        xlabel('Time (ms)');
+        ylabel('\muV');
+        xlim([0, 2.7])
+        title(['Cluster #' num2str(clust_ID)], 'FontWeight', 'normal');
+
+        if g==length(wf_event.unitIDs)
+            text(4,0, {'Red: waveform during laser' 'Blue: waveforms at other times'})
+        end
+        
+    catch
+        fprintf('Problem extracting waveforms')
     end
 end
    

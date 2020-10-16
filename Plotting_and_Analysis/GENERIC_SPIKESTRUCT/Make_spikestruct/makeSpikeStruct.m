@@ -47,8 +47,32 @@ spikeStruct.TTLs=TTLs;
 cgs=spikeStruct.cgs;
 spikeStruct.baseline_st=bl_start;
 spikeStruct.baseline_end=bl_end;
+%% Extract more cluster info
+fid = fopen('cluster_info.tsv');
+cluster_info = textscan(fid, '%d %f %f %s %f %f %f %f %s %d %d', 'HeaderLines', 1);
+fclose(fid);
 
+fid2 = fopen('cluster_group.tsv');
+C = textscan(fid2, '%s%s', 'HeaderLines', 1);
+fclose(fid2);
+chanFlag=0;
+if ( length(cluster_info{1}) ~= length(C{1}))
+    fprintf('\n *** Fix blanks in cluster_info before proceeding ****\n')
+    fprintf('\nIf script is continued, will attempt to estimate centre channel\n')
+    chanFlag=1;
+else
+    c_channels_all=cluster_info{6};
+    contam_pc_all=cluster_info{3};
+end
 
+[~, groups] = readClusterGroupsCSV('cluster_group.tsv');
+good_clusts=find(groups==2); %all the ones marked as 'good' (green) in PHY
+c_channelsOEP=c_channels_all(good_clusts);  % this is given in terms of OEP chans
+[~,c_channelPHY]=ismember(c_channelsOEP, spikeStruct.chanMap);
+
+contam_pc=contam_pc_all(good_clusts);
+spikeStruct.contam_pc=contam_pc;
+%%
 %Check for bad (disconnected) channels and flag if there are any - will affect waveform extraction later on
 nChansBad=spikeStruct.n_channels_dat-size(spikeStruct.chanMap, 1)   ;
 
@@ -127,13 +151,23 @@ spikeStruct.nWFs_extracted=n_spks; %this is the number of waveforms sampled to g
 %% Channel information for each cluster
 %extract the centre channel for the mean waveform on that centre channel for each cluster
 
-for iUnit = 1:1:length(spikeStruct.cids)   
+for iUnit = 1:length(spikeStruct.cids)   
    this_wf = squeeze(mean_wf(iUnit, :, :)); %get rid of the singleton dim
    this_std= squeeze(std_wf(iUnit, :,:));
-   [~, c_channel]=max(range(this_wf'));  %this will give the centre channel 
-   spikeStruct.c_channel(iUnit)=c_channel; %NB channels in Phy are also zero indexed so chan 1 in phy = chan 2 here.
-   spikeStruct.av_waveform{iUnit}=this_wf(c_channel, :);  %store the average waveform on the centre channel    
-   spikeStruct.std_waveform{iUnit}=this_std(c_channel, :);  %store the average waveform on the centre channel   
+ 
+  if chanFlag %if PHY output has corrupted / not filled in correctly, try to estimate
+   [~, c_channelest]=max(range(this_wf'));  %this will estimate the centre channel 
+   spikeStruct.c_channel(iUnit)=c_channelest; %NB channels in Phy are also zero indexed so chan 1 in phy = chan 2 here.
+   spikeStruct.av_waveform{iUnit}=this_wf(c_channelest, :);  %store the average waveform on the centre channel    
+   spikeStruct.std_waveform{iUnit}=this_std(c_channelest, :);  %store the average waveform on the centre channel   
+   fprintf('\n Estimating centre channel for unit \n' )
+  else
+    spikeStruct.c_channel(iUnit)=c_channelPHY(iUnit);
+    spikeStruct.av_waveform{iUnit}=this_wf(c_channelPHY(iUnit), :);  %store the average waveform on the centre channel    
+    spikeStruct.std_waveform{iUnit}=this_std(c_channelPHY(iUnit), :);  %store the average waveform on the centre channel   
+  end
+      
+  
 end
 
 %% Useful vector of depths for plotting - clusters listed by depth order.
@@ -174,3 +208,4 @@ spikeStruct.timeRange=[min_t, max_t]; %save the time range of the spikes.
 %%
 %Now save the spikeStruct
 save( [rootpath '\spikeStruct.mat'], 'spikeStruct', '-v7.3');   
+fprintf('\n Finished!')
