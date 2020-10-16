@@ -2,6 +2,7 @@ function [blocktimes] = block_detector(ts)
 %Detects distinct blocks of data within continuous timestamps - for OEP
 %recs in multiple blocks.
 blocktimes=[];
+jump_inds=[];
 if sum(diff(ts)>0.1)
     jump_inds=find(diff(ts)>0.1);
     for j=1:length(jump_inds)

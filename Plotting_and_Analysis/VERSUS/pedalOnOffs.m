@@ -10,10 +10,10 @@ function [pedal_ts] = pedalOnOffs(fn)
 
 % Set timestamps so that zero is at the start of the recording (as for the
 % spiking data from kilosort/PHY)
-ADC_tbase=ADC_ts-ADC_ts(1); % timebase should start at zero
+ADC_ts=ADC_ts-ADC_ts(1); % timebase should start at zero
 fs=ADC_info.header.sampleRate;
 %% Detect large gaps in the rec (will generate a warning if the rec is not all in one block
-blocks=block_detector(ADC_tbase);
+blocks=block_detector(ADC_ts);
 
 %% Filter (cleans up a bit)
 
