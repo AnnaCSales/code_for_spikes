@@ -12,7 +12,7 @@
 
 %% Start by reading in the raw ADC data and the TTL information
 
-ADC_fn='C:\Versus data\141020\141020\2020-10-14_16-15-39\113_CH34.continuous'; %this is a string containing the location of the data file
+ADC_fn='C:\Versus data\281020\2020-10-28_16-13-14\100_CH34.continuous'; %this is a string containing the location of the data file
 [raw_sig, ADC_ts_raw,  ADC_info] = load_open_ephys_data(ADC_fn);  %returns the data, the timebase, and a struct with more useful information
 
 % Set timestamps so that zero is at the start of the recording (as for the
@@ -26,7 +26,7 @@ blocks=block_detector(ADC_tbase);
 
 %% optional - specify a time period (otherwise use entire recording - comment out as req)
 
-analysis_window=[ADC_tbase(1), 1270]  %the time window we want to use
+analysis_window=[ADC_tbase(1), 4000]  %the time window we want to use
 
 % analysis_window=[230, 240]; %specify the period we want to analyse, in seconds
 
