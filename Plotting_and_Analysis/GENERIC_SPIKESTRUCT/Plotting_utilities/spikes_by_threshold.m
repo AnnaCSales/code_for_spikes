@@ -1,4 +1,4 @@
-function [spike_times] = spikes_by_threshold(data, fs, nstds)
+function [spike_times, spike_amps] = spikes_by_threshold(data, fs, nstds)
 %Quick script to read in a window of data, cut out extreme values, extract spikes. Produces a
 %vector of spike times. Follows Quiroga (2004, Neural Computation) for details of
 %threshold and definitions of noise.
@@ -35,5 +35,10 @@ num_spikes=length(peak_inds);
 
 %return the spike times.
 spike_times=tst(inds_above(locs));  %spike timestamps.
+spike_amps=zeros(num_spikes, 1);
+% return the spike amplitudes
+for j=1:num_spikes
+    spike_amps(j,:)=data(peak_inds(j));
+end
 
 end

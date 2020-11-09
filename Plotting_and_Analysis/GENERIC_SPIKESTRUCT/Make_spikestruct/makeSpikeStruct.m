@@ -74,7 +74,7 @@ contam_pc=contam_pc_all(good_clusts);
 spikeStruct.contam_pc=contam_pc;
 %%
 %Check for bad (disconnected) channels and flag if there are any - will affect waveform extraction later on
-nChansBad=spikeStruct.n_channels_dat-size(spikeStruct.chanMap, 1)   ;
+nChansBad=spikeStruct.n_channels_dat-length(spikeStruct.chanMap)   ;
 
 % Get the sampling rate.
 fs=spikeStruct.sample_rate;

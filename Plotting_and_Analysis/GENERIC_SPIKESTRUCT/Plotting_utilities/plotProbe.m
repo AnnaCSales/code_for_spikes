@@ -13,9 +13,9 @@ for chan=1:length(spikeStruct.xcoords)  %go through each channel, make a note of
     clusts_here=find(spikeStruct.c_channel==chan);
     if clusts_here
         if mod(chan, n_cols)==0
-            text(spikeStruct.xcoords(chan)+40,spikeStruct.ycoords(chan),[num2str(clusts_here)],'HorizontalAlignment','right')
-        elseif mod(chan,n_cols)==n_cols-1;
-            text(spikeStruct.xcoords(chan)-40,spikeStruct.ycoords(chan),[ num2str(clusts_here)],'HorizontalAlignment','left')
+            text(spikeStruct.xcoords(chan)+4,spikeStruct.ycoords(chan),[num2str(clusts_here)],'HorizontalAlignment','right')
+        elseif mod(chan,n_cols)%==n_cols-1;
+            text(spikeStruct.xcoords(chan)-4,spikeStruct.ycoords(chan),[ num2str(clusts_here)],'HorizontalAlignment','left')
         end
     end
 end

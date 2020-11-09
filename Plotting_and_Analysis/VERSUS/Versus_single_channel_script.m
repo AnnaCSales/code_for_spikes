@@ -10,34 +10,35 @@
 
 %Anna Sales October 2020
 % WHERE IS YOUR DATA?
-data_dir='D:\Versus\290920\Rec5\';
+data_dir='C:\Versus data\281020\2020-10-28_16-13-14\CAR\';
 
 % raw data
-[data_raw, ts_raw, info] = load_open_ephys_data([data_dir '126_CH9_5.continuous']);   
+[data_raw, ts_raw, info] = load_open_ephys_data([data_dir '102_CH19.continuous']);   
 first_timepoint=ts_raw(1);
 ts_raw=ts_raw-first_timepoint;
 
-[events, ts_ev, info_ev] = load_open_ephys_data([data_dir 'all_channels_5.events']);   
+[events, ts_ev, info_ev] = load_open_ephys_data([data_dir 'all_channels.events']);   
 ts_ev=ts_ev-first_timepoint;
 
 % events
-TTLs=returnTTLs(data_dir);  %returns manual and digital TTLs
+% TTLs=returnTTLs(data_dir);  %returns manual and digital TTLs
 
 %footshocks
-fsts_=TTLs.digital{3};
-fsts_(2:2:end)=[];  %they come in pairs. Just mark the onset.
+fsts=footshock_TTLs;
+% fsts_=TTLs.digital{7};
+% fsts_(2:2:end)=[];  %they come in pairs. Just mark the onset.
 
 
 %pedal
-pedal_ts=spikeStruct.TTLs.digital{7};
-sep_events_inds=find(diff(pedal_ts)>0.2); %separate pedal pushes
-pedts_=[pedal_ts(1);pedal_ts(sep_events_inds+1)];
+% pedal_ts=spikeStruct.TTLs.digital{7};
+% sep_events_inds=find(diff(pedal_ts)>0.2); %separate pedal pushes
+% pedts_=[pedal_ts(1);pedal_ts(sep_events_inds+1)];
 
 
 %%  select a time window of interest (optional - just use entire rec if needed)
 
 t_start=0;  %time window bounds, in seconds. 
-t_end=1200;
+t_end=4000;
 
 t_range=[t_start, t_end];
 t_keep=find(ts_raw>t_start & ts_raw<=t_end); %indices within selected time range
@@ -48,7 +49,7 @@ fs=info.header.sampleRate; % extract sampling rate
 
 % cut events to match the same range
 fsts=fsts_(find(fsts_>t_start & fsts_<=t_end));
-pedts=pedts_(find(pedts_>t_start & pedts_<=t_end));
+% pedts=pedts_(find(pedts_>t_start & pedts_<=t_end));
 %% Filter data (if not already done)
 
 % filterRange=[300 6000];    %freq range to keep
@@ -116,11 +117,13 @@ xlabel('ms')
 ylabel('\mu V')
 
 %% Clean up floating voltages (and wrongly windowed spikes), before and after the spike centre
-sp_early=spike_data(:, 1:20);
-[r_e,~]=find(abs(sp_early)>50);  %base the limit on 8*estimate of noise, above.
+[r_noise, ~]=find(abs(spike_data)>200);
 
-sp_late=spike_data(:, 70:end);
-[r_l,~]=find(abs(sp_late)>50);
+sp_early=spike_data(:, 1:32);
+[r_e,~]=find(abs(sp_early)>40);  %base the limit on 8*estimate of noise, above.
+
+sp_late=spike_data(:, 48:end);
+[r_l,~]=find(abs(sp_late)>40);
 
 sp_med=spike_data(:, 39:41);
 [r_m,~]=find((sp_med)>0) ;  %points at this point should be negative
@@ -131,7 +134,7 @@ sp_med=spike_data(:, 39:41);
 % [r_valley, ~]=find((sp_val)<-300);
 % killrows=unique([r_e', r_l', r_m', r_valley']); %rows to delete
 
-killrows=unique([r_e', r_l', r_m']); %rows to delete
+killrows=unique([r_e', r_l', r_m', r_noise']); %rows to delete
 
 spike_times(killrows, :)=[];
 spike_data(killrows, :)=[];
@@ -150,29 +153,29 @@ xlabel('ms')
 ylabel('\mu V')
 xlim([0, spike_tbase(end)])
 
-figure('Color', 'w', 'units', 'normalized', 'Position', [0.1 0.1 0.6, 0.3])
-subplot(2,1,1)
-plot([spike_times, spike_times], [-1,1], 'k')
-ylim([-3,3])
-xlim([t_range(1), t_range(2)])
-xlabel('Time (s)')
-title('All spikes, raster plot', 'FontWeight', 'normal','FontSize', 10)
-set(gca, 'FontSize', 8)
-hold on
-plot([fsts, fsts], [-3,3], 'Color', [1 0 0 0.2])
-plot([pedts, pedts], [-3,3], 'Color', [0 1 0.1 0.2])
+% figure('Color', 'w', 'units', 'normalized', 'Position', [0.1 0.1 0.6, 0.3])
+% subplot(2,1,1)
+% plot([spike_times, spike_times], [-1,1], 'k')
+% ylim([-3,3])
+% xlim([t_range(1), t_range(2)])
+% xlabel('Time (s)')
+% title('All spikes, raster plot', 'FontWeight', 'normal','FontSize', 10)
+% set(gca, 'FontSize', 8)
+% hold on
+% plot([fsts, fsts], [-3,3], 'Color', [1 0 0 0.2])
+% % plot([pedts, pedts], [-3,3], 'Color', [0 1 0.1 0.2])
 
-subplot(2,1,2)
-binwin=1;
-binedges=t_range(1):1:t_range(2);
-bincenters=binedges-binwin/2;
-bincenters(1)=[];
-
-spk_rates=histcounts(spike_times, binedges);
-plot(bincenters, spk_rates)
-xlim([t_range(1), t_range(2)])
-xlabel('Time (s)')
-ylabel('Spk rate (Hz)')
+% subplot(2,1,2)
+% binwin=1;
+% binedges=t_range(1):1:t_range(2);
+% bincenters=binedges-binwin/2;
+% bincenters(1)=[];
+% 
+% spk_rates=histcounts(spike_times, binedges);
+% plot(bincenters, spk_rates)
+% xlim([t_range(1), t_range(2)])
+% xlabel('Time (s)')
+% ylabel('Spk rate (Hz)')
 %% Now extract tables of features - amplitude, width, projections along top principal components.
 % extract peak amplitude and FWHM.
 plotExamples=1;  % will plot 5 examples if =1

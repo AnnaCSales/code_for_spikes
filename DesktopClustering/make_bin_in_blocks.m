@@ -100,6 +100,9 @@ for iCh = 1:length(ChSaved)
             try
                 [data_, ~, ~] = load_open_ephys_data(fname_in{iCh});
                 data_(1:BlkLength*(iBlk-1))=[]; % Strip off previously processed blocks
+%                 
+%                 data_(data_>75)=75;
+%                 data_(data_<-75)=-75;
                 if iBlk ~= noBlks 
                     data{iCh} = data_(1:BlkLength);
                 else

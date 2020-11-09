@@ -85,7 +85,7 @@ for g=1:length(wf_event.unitIDs)
         title(['Cluster #' num2str(clust_ID)], 'FontWeight', 'normal');
 
         if g==length(wf_event.unitIDs)
-            text(4,0, {'Red: waveform during laser' 'Blue: waveforms at other times'})
+            text(4,0, {'Red: waveform during event' 'Blue: waveforms at other times'})
         end
         
     catch

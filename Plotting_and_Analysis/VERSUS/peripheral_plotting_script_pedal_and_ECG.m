@@ -5,13 +5,13 @@
 addpath(genpath('D:\Code\MATLAB\AnalysingPHYoutput\GENERIC'));
 
 %% Load in the spikeStruct.
- datapath='D:\Versus\141020\Rec2\Cluster\'; %dont forget backslash
-load([datapath 'spikeStruct.mat']);
+ datapath=pwd; %dont forget backslash
+% load([datapath 'spikeStruct.mat']);
 
 % Path to ADC file with pedal on
-ADC_fn='D:\Versus\141020\Rec2\113_ADC3_2.continuous'
+ADC_fn=[datapath '\100_ADC3.continuous'];
 % Path to continuous file with ECG recording.
-ECG_fn='D:\Versus\141020\Rec2\113_CH34_2.continuous';
+ECG_fn=[datapath '\100_CH34.continuous'];
 %% Plot out where all the clusters are in space on the probe
 probe_fig = plotProbe(spikeStruct)
 
@@ -44,19 +44,20 @@ pms2.baseline = [] ; %leave empty if no baseline!
 %% specify TTLs to plot
 
 pedal_ts=pedalOnOffs(ADC_fn);
-TTLchan1=2;  %this is the channel to take TTLs from
+TTLchan1=7;  %this is the channel to take TTLs from
 fsts=spikeStruct.TTLs.digital{TTLchan1};
-fsts(2:2:end)=[];
+% fsts(2:2:end)=[];
 
-fsts_2Hz=fsts
-fsts_2Hz(diff(fsts_2Hz)>0.55)=[];
-fsts_2Hz(end)=[];
+inds2=find( diff(fsts)>1.9 & diff(fsts) <2.1)+1;
+inds2=[inds2(1)-1; inds2];
+fsts_2Hz=fsts(inds2);
 
-fsts_025Hz=fsts
-fsts_025Hz(diff(fsts_025Hz)<4| diff(fsts_025Hz) >4.5 )=[];
+inds025=find( diff(fsts)>3.9 & diff(fsts) <4.1)+1;
+inds025=[inds025(1)-1; inds025];
+fsts_025Hz=fsts(inds025);
 
 nlabels=length(spikeStruct.TTLs.manual.TTL_labels);
-labels_to_keep=[1:nlabels];
+labels_to_keep=[2,7,8,10,11,12,14,23,24,25,26,27,30];
 labels=cell(1, length(labels_to_keep));
 labels(1:length(labels_to_keep))=spikeStruct.TTLs.manual.TTL_labels(labels_to_keep)
 
@@ -98,7 +99,7 @@ binwin=0.002;
 foot_sp_fig      = figure('color','w','NumberTitle','off', 'name','Spiking around footshock / pinch TTLs', 'units', 'centimeters', 'pos',[5 2 24 17]);
 foot_spTabGroup = uitabgroup(foot_sp_fig,'TabLocation','Left');
 
-TTL_to_plot=fsts_025Hz;  %update this as needed. These are the TTLs to plot.
+TTL_to_plot=fsts;  %update this as needed. These are the TTLs to plot.
 nTTL=length(TTL_to_plot);
 
 for iUnit=1:nclusts
@@ -154,7 +155,7 @@ for iUnit=1:nclusts
 
   end
 
-  xlabel('')
+   xlabel('Time (s)')
   ylabel('Trial #')
   set(gca, 'FontSize', 11);
   title('Spikes around footshock', 'FontWeight', 'normal')    
@@ -166,31 +167,31 @@ for iUnit=1:nclusts
   %get the means / sums
 
   %plot mean firing rate
-  binned_mean_fr=mean(spk_count_all,1);
-  f=subplot(2,1,2); 
-  xlabel('Time (s)')
-  ylabel('Mean spike count')
-  if sum(binned_mean_fr)
-      bar(t_plot,binned_mean_fr);
-      hold on
-    
-      text(0, 0.8,[num2str(1000*binwin) 'ms bins'])
-      xlim([-win(1), win(2)]);
-      maxploty=max(binned_mean_fr)+1;
-      minploty=0;
-      plot( zeros(1,7), linspace(0, maxploty, 7), 'r', 'LineWidth', 1)  %use an odd number in the plotting as laser stamps come in pairs - that way it'll never be square
-      ylim([0,1])
-      set(gca, 'FontSize', 11);
-      xlim([-0.05 0.1])
-  end
-  d.Position=[0.12, 0.35, 0.7, 0.6];
-  f.Position=[0.12, 0.075, 0.7, 0.2];
+%   binned_mean_fr=mean(spk_count_all,1);
+%   f=subplot(2,1,2); 
+%   xlabel('Time (s)')
+%   ylabel('Mean spike count')
+%   if sum(binned_mean_fr)
+%       bar(t_plot,binned_mean_fr);
+%       hold on
+%     
+%       text(0, 0.8,[num2str(1000*binwin) 'ms bins'])
+%       xlim([-win(1), win(2)]);
+%       maxploty=max(binned_mean_fr)+1;
+%       minploty=0;
+%       plot( zeros(1,7), linspace(0, maxploty, 7), 'r', 'LineWidth', 1)  %use an odd number in the plotting as laser stamps come in pairs - that way it'll never be square
+%       ylim([0,1])
+%       set(gca, 'FontSize', 11);
+%       xlim([-0.05 0.1])
+%   end
+  d.Position=[0.12, 0.1, 0.7, 0.84];
+%   f.Position=[0.12, 0.075, 0.7, 0.2];
 end
 
 %% Smooth firing rate repsonses on the probe by depth, with TTLs. 
 
-cellList=[1:6]
-timePlot=[0, 500]; % time to plot, in seconds.
+cellList=[1,3,5]
+timePlot=[3240,3800]; % time to plot, in seconds.
 binsize=1; %in seconds
 
 fs=spikeStruct.sample_rate;  %sampling rate
@@ -267,7 +268,7 @@ for u=1:length(cellList)
     mybar.FaceColor=[0 0 1];
     mybar.FaceAlpha=0.7;
     mybar.LineWidth=1;
-    
+    ylim([0,10])
    
     hold on
     if plot_pos2(u)==1
@@ -291,16 +292,16 @@ for u=1:length(cellList)
     ymax=aa.YLim(2)
     ymin=aa.YLim(1)
     
-%     if fsts_inc
-%        plot(repmat(fsts_inc,1,3), [ymin, ymax, ymax], '-r', 'Color', [1 0 0 0.1], 'LineWidth', 1);
+    if fsts_inc
+       plot(repmat(fsts_inc,1,3), [ymin, ymax, ymax], '-r', 'Color', [1 0 0 0.1], 'LineWidth', 1);
+    end
+%     if fs2Hz_inc
+%        plot(repmat(fs2Hz_inc,1,3), [ymin, ymax, ymax], '-r', 'Color', [1 0 0 0.1], 'LineWidth', 1);
 %     end
-    if fs2Hz_inc
-       plot(repmat(fs2Hz_inc,1,3), [ymin, ymax, ymax], '-r', 'Color', [1 0 0 0.1], 'LineWidth', 1);
-    end
-    
-    if fs025Hz_inc
-       plot(repmat(fs025Hz_inc,1,3), [ymin, ymax, ymax], '-r', 'Color', [1 0.5 0.5 0.1], 'LineWidth', 1);
-    end
+%     
+%     if fs025Hz_inc
+%        plot(repmat(fs025Hz_inc,1,3), [ymin, ymax, ymax], '-r', 'Color', [1 0.5 0.5 0.1], 'LineWidth', 1);
+%     end
 
 
         aa=gca;
@@ -320,7 +321,7 @@ end
 
   MARKERsubplots=subplot('Position',[0.065 0.04 0.88 0.05],  'Parent', p6);
   for r=1:length(labeltimes)
-      text(labeltimes(r), 0.1, labels{r}, 'Rotation', 90 , 'Fontsize', 6)
+      text(labeltimes(r), 0.1, labels{r}, 'Rotation', 90 , 'Fontsize', 8)
   end
   set(gca,'xtick',[]) 
   set(gca,'ytick',[]) 
@@ -328,8 +329,8 @@ end
   xlim([timePlot(1), timePlot(2)])
 %% Plot as above but using instantaneous spike rate
 
-cellList=[1:9]
-timePlot=[0,1200]; % time to plot, in seconds.
+cellList=[1,3,5]
+timePlot=[0,3800]; % time to plot, in seconds.
 binsize=1; %in seconds
 
 fs=spikeStruct.sample_rate;  %sampling rate

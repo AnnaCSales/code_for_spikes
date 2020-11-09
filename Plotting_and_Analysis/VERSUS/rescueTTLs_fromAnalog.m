@@ -4,7 +4,7 @@
 
 %% Try to extract TTLs from artefact on the raw data
 % Use the initial positive deflection above 500uv.
-data_ch=abs(data_ch);
+data_ch=abs(data_ch_);
 high_inds=find(data_ch>350);
 %Look for blocks above 350 separated by at least 0.4s (fastest we went was
 %2Hz)
@@ -16,3 +16,4 @@ hold on
 plot(ts_(high_inds(gaps+1)), 500, 'go')
 
 footshock_TTLs=ts_(high_inds(gaps+1));
+footshock_TTLs_zero=footshock_TTLs-ts_(1);
