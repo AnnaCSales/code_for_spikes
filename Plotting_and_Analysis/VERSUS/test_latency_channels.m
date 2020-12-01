@@ -8,7 +8,7 @@
 % Anna Sales, November 2020
 
 %% Specify path to prerecorded data
-datapath='C:\Versus data\281020\2020-10-28_16-13-14\CAR\';
+datapath='C:\Versus data\20201125 _SECOND\Record Node 107\';
 
 % specify a path to a channel map file (script expects this in kilosort
 % format, i.e a struct with a field called 'chanMap', which lists OEP channels
@@ -22,15 +22,17 @@ nchans=length(chanMap);  %' number of channels
 
 % either extract from the raw data:
 
-% TTLs = returnTTLs_not_from_zero(datapath);
-%process footshock TTLs - these are in pairs (start, end) but we only want
-%the one marking the onset:
-% fsts=TTLs.digital{7};
-% fsts(2:2:end)=[];
+TTLs = returnTTLs_not_from_zero(datapath);
+% process footshock TTLs - these are in pairs (start, end) but we only want
+% the one marking the onset:
+fsts=TTLs.digital{2};
+fsts(2:2:end)=[];
 
+% obj_times=[920,1875];
+% fsts=fsts(fsts>obj_times(1)& fsts<obj_times(2));
 
 % Or use preprocessed file:
-fsts=footshock_TTLs;
+% fsts=footshock_TTLs;
 
 % Pull out sets of shocks delivered at difference frequencues
 
@@ -70,12 +72,12 @@ end
 %this variable will store the extracted data:
 windowed_data=zeros(nchans,window_sample_length,nTTLs);
 
-%now extract the data. NB this is a slow process with >~10 TTLs.
+%now extract the data. NB this is a slow process
 for chan=1:32
 
    fprintf('Extracting TTL windows on channel %d \n', chan);
-
-   chan_name=[datapath file_prefix 'CH' num2str(chan) file_postfix '.continuous'];
+   chan_name=[datapath file_prefix num2str(chan) file_postfix '.continuous']; % NEW FORMAT
+%    chan_name=[datapath file_prefix 'CH' num2str(chan) file_postfix '.continuous'];
    [data_full, ts_full,  ~] = load_open_ephys_data(chan_name); %read in entire chan
  
    for ttl=1:nTTLs   
@@ -225,7 +227,7 @@ xticks(xtick_ind)
  xticklabels(string(labels_x))
 xlabel('Time (ms)')
 aa=gca
-xlim([0.5, 0.3/binwin2])
+xlim([0.5, 0.1/binwin2])
 ylabel('Channel')
 yticks(1:32)
 yticklabels(fliplr(chanMap))
@@ -352,7 +354,7 @@ spikes_quad=[];
 quad1=chanMap(1:8);
 spikes_quad(:,:,1)=sum( volt_bin_data(:,:,quad1), 3);
 
-quad2=chanMap(9:16);
+quad2=chanMap(8:16);
 spikes_quad(:,:,2)=sum( volt_bin_data(:,:,quad2), 3);
 
 quad3=chanMap(17:24);
@@ -368,11 +370,11 @@ for q=1:4
     imagesc(flipud(spikes_quad(:,:, q)));
     xticks(xtick_ind)
     xticklabels(string(labels_x))
-    xlabel('Time (ms)')
-    yticks(1:1:nTTLs)
-    yticklabels(string(nTTLs:-1:1))
+    xlabel('Time (s)')
+    yticks(1:10:nTTLs)
+    yticklabels(string(nTTLs:-10:1))
     ylabel('Trial')
     title(title_labels{q})
-     xlim([0,200])
-    caxis([30,80])
+     xlim([0,0.1/binwin2])
+    caxis([10,90])
 end

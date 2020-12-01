@@ -27,7 +27,7 @@ resp_sig=filtfilt(Db,Da,resps);  %Our final processed signal.
 % LP filter to remove laser artefact / clean up for peak
 % detection
 
-HPlim=100;   %the frequency limit for the LP filter, in Hz (100):
+HPlim=600;   %the frequency limit for the LP filter, in Hz (100):
 [Db,Da]=butter(2,HPlim/(0.5*fs), 'low' );
 ecg_sig=filtfilt(Db,Da,raw_sig);  %Our final processed signal.
 

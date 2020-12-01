@@ -22,7 +22,7 @@
 % (events, messages files etc) should be in there too.
 rootpath=[pwd '\'];
 % Provide the name of the binary file used for clustering.
-rawData='dataALL.bin';
+rawData='data_edited_ALL.bin';
 
 % Provide the name of the folder where the TTL info is, if using binary
 % (this field does not matter if you are using continuous format)

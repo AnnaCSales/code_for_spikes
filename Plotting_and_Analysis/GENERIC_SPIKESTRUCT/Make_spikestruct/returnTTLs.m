@@ -43,15 +43,16 @@ if length(cont_matches)>0
     %parse the events file:
     find_newlines=regexp(manual_events, '\n');
     messages={};
-    for n=2:length(find_newlines)  %ignore the first one as it's always an internal messages
-        if n<length(find_newlines)
-          messages{n-1}=manual_events(find_newlines(n):find_newlines(n+1)-1);
-        else
-          messages{n-1}=manual_events(find_newlines(n):end);
+    if ~isempty(find_newlines)
+        for n=2:length(find_newlines)  %ignore the first one as it's always an internal messages
+            if n<length(find_newlines)
+              messages{n-1}=manual_events(find_newlines(n):find_newlines(n+1)-1);
+            else
+              messages{n-1}=manual_events(find_newlines(n):end);
+            end
         end
+        messages(end)=[]; %last one is nonsense also.
     end
-    messages(end)=[]; %last one is nonsense also.
-
     %Check the recording isn't split into blocks.
 
     ts_gaps=diff(ts_raw);  %index n of lts_gaps is the gap between TTL n+1 and n
@@ -79,8 +80,10 @@ if length(cont_matches)>0
 
         for m=1:length(messages)
                 [time, label]=strtok(messages{m}, ' ');
-                TTL_times(m)=(str2num(time)* (1/fs));
-                TTL_labels{m}=label;
+                if ~isempty(label)
+                  TTL_times(m)=(str2num(time)* (1/fs));
+                  TTL_labels{m}=label;
+                end
         end
 
             manTTL.TTL_times=TTL_times-t_first;

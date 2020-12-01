@@ -58,6 +58,7 @@ fLength       = fileInfo.header.bufferSize * length (fileInfo.ts);   % File leng
 BlkLength     = BlkLengthMin * 60 * fileInfo.header.sampleRate;      % Block length in samples
 BlksizeGB     = (BlkLength * 16*  numel(ChSaved))/(1e9*8);           % Block size in GB
 noBlks        = ceil(fLength/BlkLength);                             % Number of data blocks to process
+bitVolts      = fileInfo.header.bitVolts;
 
 fprintf('>>> Recording is %d seconds long (%.2f hours).\n',round(fLength/fileInfo.header.sampleRate),round(fLength/fileInfo.header.sampleRate)/3600 )
 fprintf('>>> Writing data as %d blocks of %d minutes, each block is %.3f GB.\n',noBlks,BlkLengthMin,BlksizeGB)
@@ -101,8 +102,8 @@ for iCh = 1:length(ChSaved)
                 [data_, ~, ~] = load_open_ephys_data(fname_in{iCh});
                 data_(1:BlkLength*(iBlk-1))=[]; % Strip off previously processed blocks
 %                 
-%                 data_(data_>75)=75;
-%                 data_(data_<-75)=-75;
+%                  data_(data_>75)=75;
+%                  data_(data_<-75)=-75;
                 if iBlk ~= noBlks 
                     data{iCh} = data_(1:BlkLength);
                 else
@@ -118,7 +119,7 @@ for iCh = 1:length(ChSaved)
                 flag_{iCh} = 0;   
             end
         end
-        data = cell2mat(data);
+        data = cell2mat(data) / bitVolts ; %convert to integers - we are saving as int16
         info.flag(:,iBlk)= cell2mat(flag_);
         fprintf('>>> Import took %ds seconds, now writing to .bin ...\n',round(toc(t2))) 
 

@@ -2,23 +2,21 @@
 %Comment \ uncomment \ run by highlighting whatever you need. 
 % Anna Sales April 2017
 %% 
-[event_data_all, event_ts_all, event_info] = load_open_ephys_data('D:\Versus\290920\Rec5\all_channels_5.events');
-[data_all, ts_offset, info] = load_open_ephys_data('D:\Versus\290920\Rec5\126_CH10_5.continuous');   
+[event_data_all, event_ts_all, event_info] = load_open_ephys_data('C:\Versus data\20201125 _SECOND\Record Node 107\all_channels_2.events');
+[data_all, ts_offset, info] = load_open_ephys_data('C:\Versus data\20201125 _SECOND\Record Node 107\100_1_2.continuous');   
 %[spike_data, spike_ts, spike_info] = load_open_ephys_data('C:\openEphys\Recordings\2017-02-03_12-18-05\SE0.spikes');
 fs=info.header.sampleRate; % extract sampling rate
 
 ts_all=ts_offset-ts_offset(1);
 
-win=[0,1200];
+win=[0 ts_all(end)+1];
 keep_inds=find(ts_all>win(1) & ts_all<win(2));
 
 data=data_all(keep_inds);
 ts=ts_all(keep_inds);
-event_keep_inds=find(event_ts>win(1) & event_ts<win(2));
+event_keep_inds=find(event_ts_all>win(1) & event_ts_all<win(2));
 event_data=event_data_all(event_keep_inds);
 event_ts=event_ts_all(event_keep_inds)-ts_offset(1);
-
-
 
 fs=info.header.sampleRate; % extract sampling rate
 figure
@@ -26,11 +24,11 @@ title('raw data')
 plot(ts, data) 
 xlabel('Time(s)');
 ylabel('Voltage (\mu V)');
-% ylim([-400, 400]);
+%  ylim([-4000, 4000]);
 % xlim([ts2(1), ts2(end)]);
 hold on
-plot(event_ts(event_data==2), 100, 'ro');
-plot(event_ts(event_data==6), 100, 'gs');
+ plot(event_ts(event_data==1), 100, 'ro');
+% plot(event_ts(event_data==6), 100, 'gs');
 %block_times=cumsum([110.0, 84+244.0, 108+571.0, 546.0+55, 113+280.0, 348.0+104, 128.0] );
 %hold on;
 %plot(repmat(block_times, 50, 1), linspace(-1000, 1000, 50) , '.')
